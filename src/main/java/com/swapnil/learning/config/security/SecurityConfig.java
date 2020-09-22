@@ -13,6 +13,8 @@ import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientProperties;
 import org.springframework.context.annotation.Configuration;
@@ -43,6 +45,8 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 @Configuration
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
+	Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
+	
 	@Autowired
 	private OAuth2ClientProperties oAuth2ClientProperties;
 
@@ -61,8 +65,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 		// USE JWT tokens (locally validated) to validate HEAD, GET, and OPTIONS
 		// requests
-		//List<String> readMethod = Arrays.asList("HEAD", "GET", "OPTIONS");
-		List<String> readMethod = Arrays.asList("HEAD", "OPTIONS");
+		List<String> readMethod = Arrays.asList("HEAD", "GET", "OPTIONS");
+		//List<String> readMethod = Arrays.asList("HEAD", "OPTIONS");
 		RequestMatcher readMethodRequestMatcher = request -> readMethod.contains(request.getMethod());
 		authenticationManagers.put(readMethodRequestMatcher, jwt());
 
@@ -88,7 +92,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		validators.add(new JwtIssuerValidator(issuer));
 		validators.add(token -> {
 			Set<String> expectedAudience = new HashSet<>();
-			expectedAudience.add("api://default"); // this is the default value, update this accordingly
+			expectedAudience.add("0oazmpapzgnlrFn2g4x6"); // this is the default value, update this accordingly
 			return !Collections.disjoint(token.getAudience(), expectedAudience) ? OAuth2TokenValidatorResult.success()
 					: OAuth2TokenValidatorResult.failure(new OAuth2Error(OAuth2ErrorCodes.INVALID_REQUEST,
 							"This aud claim is not equal to the configured audience",
@@ -106,8 +110,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		String issuer = oAuth2ClientProperties.getProvider().get("okta").getIssuerUri();
 		String introspectionUri = issuer + "/v1/introspect";
 
+		logger.debug("Introspect URL==== {} ",introspectionUri);
+		
 		// The default opaque token logic
 		OAuth2ClientProperties.Registration oktaRegistration = oAuth2ClientProperties.getRegistration().get("okta");
+		logger.debug("Client Id==== {} ",oktaRegistration.getClientId());
 		OpaqueTokenIntrospector introspectionClient = new NimbusOpaqueTokenIntrospector(introspectionUri,
 				oktaRegistration.getClientId(), oktaRegistration.getClientSecret());
 		return new OpaqueTokenAuthenticationProvider(introspectionClient)::authenticate;
