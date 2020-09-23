@@ -65,8 +65,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 		// USE JWT tokens (locally validated) to validate HEAD, GET, and OPTIONS
 		// requests
-		List<String> readMethod = Arrays.asList("HEAD", "GET", "OPTIONS");
-		//List<String> readMethod = Arrays.asList("HEAD", "OPTIONS");
+		//List<String> readMethod = Arrays.asList("HEAD", "GET", "OPTIONS");
+		List<String> readMethod = Arrays.asList("HEAD", "OPTIONS");
 		RequestMatcher readMethodRequestMatcher = request -> readMethod.contains(request.getMethod());
 		authenticationManagers.put(readMethodRequestMatcher, jwt());
 
@@ -90,14 +90,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		List<OAuth2TokenValidator<Jwt>> validators = new ArrayList<>();
 		validators.add(new JwtTimestampValidator());
 		validators.add(new JwtIssuerValidator(issuer));
-		validators.add(token -> {
+		/*validators.add(token -> {
 			Set<String> expectedAudience = new HashSet<>();
-			expectedAudience.add("0oazmpapzgnlrFn2g4x6"); // this is the default value, update this accordingly
+			expectedAudience.add("api://default"); // this is the default value, update this accordingly
 			return !Collections.disjoint(token.getAudience(), expectedAudience) ? OAuth2TokenValidatorResult.success()
 					: OAuth2TokenValidatorResult.failure(new OAuth2Error(OAuth2ErrorCodes.INVALID_REQUEST,
 							"This aud claim is not equal to the configured audience",
 							"https://tools.ietf.org/html/rfc6750#section-3.1"));
-		});
+		});*/
 		OAuth2TokenValidator<Jwt> validator = new DelegatingOAuth2TokenValidator<>(validators);
 		jwtDecoder.setJwtValidator(validator);
 
